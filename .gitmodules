@@ -1,0 +1,3 @@
+[submodule "plus/DBD-Pg"]
+	path = plus/DBD-Pg
+	url = git@github.com:Warstone/DBD-Pg.git
