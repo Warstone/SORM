@@ -6,6 +6,7 @@ use FindBin;
 use App::Info::RDBMS::PostgreSQL;
 use DBI;
 
+    $| = 1;
 my $dsn = init_database();
 
 print "Executable here\n";
@@ -14,7 +15,6 @@ kill_database();
 
 sub init_database {
     kill_database();
-    $| = 1;
     my $pg = App::Info::RDBMS::PostgreSQL->new;
 
     my $target_dir = $FindBin::Bin . '/var/testdb';
@@ -46,16 +46,12 @@ sub init_database {
 }
 
 sub kill_database {
-    $| = 1;
     my $pg = App::Info::RDBMS::PostgreSQL->new;
     die "PostgreSQL is not installed. :-(\n" unless $pg->installed;
 
     my $target_dir = $FindBin::Bin . '/var/testdb';
     (my $pg_ctl = $pg->initdb) =~ s/initdb/pg_ctl/;
     if(-e "$target_dir/data/postmaster.pid"){
-        open my $pidf, "< $target_dir/data/postmaster.pid" || die $!;
-        my $pid = <$pidf>;
-        close $pidf;
         print "==> Killing old postmaster\n";
         `$pg_ctl -D $target_dir/data stop`;
     }
