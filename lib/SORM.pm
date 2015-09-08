@@ -6,9 +6,9 @@ use Class::XSAccessor {
 };
 
 our %PROTOCOLS_SUPPORTED = (
-    postgresql => 'dbi:Pg',
-    pgsql => 'dbi:Pg',
-    pg => 'dbi:Pg',
+    postgresql => 'Pg',
+    pgsql => 'Pg',
+    pg => 'Pg',
 );
 
 sub new {
