@@ -5,12 +5,24 @@ use lib::abs qw\lib var/lib plus/DBD-Pg/t/lib\;
 use FindBin;
 use App::Info::RDBMS::PostgreSQL;
 use DBI;
+use TestORM;
+use JSON::XS;
 
-    $| = 1;
+$| = 1;
 my $dsn = init_database();
 
-print "Executable here\n";
+my $orm = TestORM->new();
+$orm->connect($dsn);
+=cut
+foreach my $row ($orm->q("SELECT * FROM master_table")) {
+    print $row->id . ": " . encode_json($row->data) . "\n";
+}
 
+foreach my $row ($orm->q("SELECT m.data, s.* FROM master_table m LEFT JOIN slave_table s ON s.master_id = m.id WHERE s.id <= 25")) {
+    print $row->id . ": " . $row->slave_data . ", " . encode_json($row->data) . "\n";
+}
+=cut
+$orm->disconnect;
 kill_database();
 
 sub init_database {
@@ -41,7 +53,9 @@ sub init_database {
         close $fh;
         $dbh->do($sql);
     }
+    $dbh->disconnect;
 
+    print "==> Database ready\n";
     return $dsn;
 }
 
@@ -53,12 +67,14 @@ sub kill_database {
     (my $pg_ctl = $pg->initdb) =~ s/initdb/pg_ctl/;
     if(-e "$target_dir/data/postmaster.pid"){
         print "==> Killing old postmaster\n";
-        `$pg_ctl -D $target_dir/data stop`;
+        my $cmd = "$pg_ctl -D $target_dir/data stop";
+        `$cmd`;
     }
 
     if(-e $target_dir) {
         print "==> Removing old database\n";
-        system ("rm -rf $target_dir");
+        my $cmd = "rm -rf $target_dir";
+        system ($cmd);
     }
 
 }

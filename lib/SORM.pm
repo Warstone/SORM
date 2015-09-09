@@ -1,65 +1,46 @@
 package SORM;
-use SORM::Query;
-use Mojo::URL;
+use strict;
+use SORM::Meta;
 use Class::XSAccessor {
-    accessors => [qw/dbi username password options dsn pool meta/],
+    accessors => [qw/dbh dsn mobj/],
+};
+use Class::Accessor::Inherited::XS {
+    inherited => [qw/table_base_class column_base_class meta_base_class query_base_class meta/]
 };
 
-our %PROTOCOLS_SUPPORTED = (
-    postgresql => 'Pg',
-    pgsql => 'Pg',
-    pg => 'Pg',
-);
+__PACKAGE__->table_base_class('SORM::Meta::Table');
+__PACKAGE__->column_base_class('SORM::Meta::Column');
+__PACKAGE__->meta_base_class('SORM::Meta');
+__PACKAGE__->query_base_class('SORM::Query');
+
 
 sub new {
-    my ($class, $url, $params) = @_;
-    $params \\= {};
-    my $self = bless $params, $class || ref $class || __PACKAGE__;
-
-    $self->from_string($url) if defined $url;
-    $self->pool(SORM::Pool->new($self, $self->pool));
+    my ($class) = @_;
+    my $self = bless {}, $class || ref $class || __PACKAGE__;
 }
 
-sub init {
+sub connect {
+    my ($self, $dsn, $login, $password) = @_;
+    $self->dsn($dsn);
+    $self->dbh(DBI->connect($dsn, $login, $password, {AutoCommit => 1, RaiseError => 1}));
+
+    $self->make_meta();
+}
+
+sub disconnect {
     my ($self) = @_;
-    $self->meta( $self->pool->provider->load_meta ) if $self->meta_autoget;
-    $self->meta( $self->meta_override($self->meta) );
-    $self->build_meta( $self->meta );
-    $self->pool->provider->process_meta($self->meta);
+    $self->dbh->disconnect;
 }
 
-sub meta_override { return $_[1]; }
+sub make_meta {
+    my ($self) = @_;
 
-sub from_string {
-    my ($str) = @_;
-
-    my $url = Mojo::URL->new($str);
-    croak qq{Invalid PostgreSQL connection string "$str"} unless defined $PROTOCOLS_SUPPORTED{$url->protocol};
-
-    $self->dbi($PROTOCOLS_SUPPORTED{$url->protocol});
-    my $db = $url->path->parts->[0];
-    my $dsn = $PROTOCOLS_SUPPORTED{$url->protocol} . ":";
-    $dsn .= "dbname=$db" if defined $db;
-
-    if (my $host = $url->host) { $dsn .= ";host=$host" }
-    if (my $port = $url->port) { $dsn .= ";port=$port" }
-
-    if (($url->userinfo // '') =~ /^([^:]+)(?::([^:]+))?$/) {
-        $self->username($1);
-        $self->password($2) if defined $2;
-    }
-
-    my $hash = $url->query->to_hash;
-    if (my $service = delete $hash->{service}) { $dsn .= ";service=$service" }
-
-    @{$self->options}{keys %$hash} = values %$hash;
-
-    $dsn =~ s/(.*):/$1/;
-
-    return $self->dsn($dsn);
+    $self->mobj( $self->meta_base_class->new() )->parse_meta($self, $self->meta);
 }
 
 sub q {
-    my $self = $_[0];
-    return SORM::Query->new(@_);
+    my ($self, $sql) = @_;
+    return $self->query_base_class->new( $self, $self->dbh->prepare($sql) );
 }
+
+1;

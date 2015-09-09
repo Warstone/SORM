@@ -1,6 +1,8 @@
 package SORM::Meta;
+use SORM::Meta::Table;
 use Class::XSAccessor {
-    accessors => [qw/table columns/]
+    accessors => [qw/tables/],
+    constructor => 'new'
 };
 
 
@@ -25,9 +27,15 @@ __PACKAGE__->columns({
 });
 =cut
 
-sub columns {
-    my ($pkg, $meta) = @_;
+sub parse_meta {
+    my ($self, $orm, $meta) = @_;
 
-    
+    my $tables = {};
+    foreach my $table (keys %$meta){
+        $tables->{$table} = SORM::Meta::Table->make_table($orm, $table, $meta->{$table});
+    }
+    $self->tables($tables);
+
 }
 
+1;

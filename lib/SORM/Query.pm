@@ -1,27 +1,28 @@
 package SORM::Query;
 use Class::XSAccessor {
-    accessors => [qw/query cb params engine/],
+    accessors => [qw/sth/]
 };
 
 sub new {
-    my ($class, $orm, $query) = @_;
-    return bless {
-        query => $query,
-        engine => $orm->engine
-    }, $class || ref $class || __PACKAGE__;
+    my ($class, $orm, $sth) = @_;
+    my $self = bless {}, ref $class || $class || __PACKAGE__;
+    $self->sth($sth);
+    return $self->all if wantarray;
+    return $self
 }
 
-sub cb {
-    my ($self, $cb, $params) = @_;
-    $self->cb( { cb => $cb, params => $params } );
-    return $self;
+sub all {
+    my ($self) = @_;
+
+    my $sth = $self->sth;
+    $sth->execute;
 }
 
-sub run {
-    return $_[0]->engine->run($_[0]);
+sub execute {
+    my ($self) = @_;
+
+    my $sth = $self->sth;
+    $sth->execute;
 }
 
-sub done {
-    my ($self, $objects) = @_;
-    
-}
+1;
