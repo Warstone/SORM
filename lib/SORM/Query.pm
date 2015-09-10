@@ -32,10 +32,10 @@ sub execute {
     my $signature = join("|", @$columns);
 
     my $class = $self->orm->result_base_class;
-    unless(defined $class->generated_results && defined $class->generated_results->{$signature}){
-        $self->orm->result_base_class->make_resultrow_class($self->orm, $signature, [ map { $self->orm->mobj->column_by_db_id->{$_}} @$columns ] );
+    unless(defined $class->_generated_results && defined $class->_generated_results->{$signature}){
+        $self->orm->result_base_class->make_resultrow_class($self->orm, $sth, $signature, [ map { $self->orm->mobj->column_by_db_id->{$_}} @$columns ] );
     }
-    $class = $class->generated_results->{$signature};
+    $class = $class->_generated_results->{$signature};
     die "Shit happens. This must not be" unless defined $class;
     $self->result_class($class);
 }

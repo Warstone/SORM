@@ -25,12 +25,12 @@ foreach my $row ($orm->q("SELECT * FROM master_table")) {
 print "\n\n";
 
 foreach my $row ($orm->q("
-    SELECT m.data, s.*
+    SELECT m.data AS my_cool_data, s.*
     FROM master_table m
     LEFT JOIN slave_table s ON s.master_id = m.id
     WHERE s.id <= 25
 ")) {
-    print $row->id . ": " . $row->slave_data . ", " . encode_json($row->data) . "\n";
+    print $row->id . ": " . $row->slave_data . ", " . encode_json($row->my_cool_data) . "\n";
 }
 
 $orm->disconnect;

@@ -14,11 +14,6 @@ sub _make_column {
     die "Unknown type $info->{type} for column $name" unless exists $orm->column_types->{$info->{type}};
     my $type = $orm->column_types->{$info->{type}};
 
-#    if(defined $type_data){
-#        die "Only simple datatype implemented";
-#    } else {
-        Class::XSAccessor::newxs_accessor("${class}::$name", $name, 0);
-#    }
     $class->name($name);
     $class->type($type);
 
