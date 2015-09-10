@@ -1,6 +1,6 @@
 package SORM::Query;
 use Class::XSAccessor {
-    accessors => [qw/sth orm result_class columns/]
+    accessors => [qw/sth orm result_class columns executed/]
 };
 
 sub new {
@@ -25,10 +25,12 @@ sub all {
 sub execute {
     my ($self) = @_;
 
+    return if $self->executed;
+
     my $sth = $self->sth;
     $sth->execute;
 
-    my $columns = [ map { join("_", @$_) } @{$sth->pg_canonical_ids} ];
+    my $columns = [ map { join("_", @$_) if defined $_ } @{$sth->pg_canonical_ids} ];
     my $signature = join("|", @$columns);
 
     my $class = $self->orm->result_base_class;
@@ -38,6 +40,8 @@ sub execute {
     $class = $class->_generated_results->{$signature};
     die "Shit happens. This must not be" unless defined $class;
     $self->result_class($class);
+
+    $self->executed(1);
 }
 
 1;

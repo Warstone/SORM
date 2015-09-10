@@ -35,7 +35,7 @@ sub new {
     for (my $i = 0; $i < scalar(@$data); $i++){
         my $meta = $self->_column_meta->[$i];
         my $name = $self->_sth_meta->[$i];
-        if($meta->type){
+        if($meta && $meta->type){
             $self->{$name} = $meta->type->{inflate}->($query, $data->[$i]);
         } else {
             $self->{$name} = $data->[$i];

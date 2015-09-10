@@ -24,14 +24,20 @@ foreach my $row ($orm->q("SELECT * FROM master_table")) {
 
 print "\n\n";
 
-foreach my $row ($orm->q("
-    SELECT m.data AS my_cool_data, s.*
+my $query = $orm->q("
+    SELECT m.data AS my_cool_data, 1 AS this_is_one, 2, 3, s.*
     FROM master_table m
     LEFT JOIN slave_table s ON s.master_id = m.id
     WHERE s.id <= 25
-")) {
-    print $row->id . ": " . $row->slave_data . ", " . encode_json($row->my_cool_data) . "\n";
+");
+foreach my $row ($query->all) {
+    print $row->id . ": " . $row->slave_data . ", " . encode_json($row->my_cool_data) . ", this_is_one: " . $row->this_is_one ."\n";
 }
+
+print "\n\n";
+
+use Data::Dumper;
+print Dumper($query->sth->{NAME});
 
 $orm->disconnect;
 kill_database();
