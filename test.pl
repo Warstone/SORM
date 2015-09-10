@@ -18,6 +18,7 @@ my $dsn = init_database();
 my $orm = TestORM->new();
 $orm->connect($dsn);
 
+#for (1..10000){
 foreach my $row ($orm->q("SELECT * FROM master_table")) {
     print $row->id . ": " . encode_json($row->data) . "\n";
 }
@@ -33,11 +34,11 @@ my $query = $orm->q("
 foreach my $row ($query->all) {
     print $row->id . ": " . $row->slave_data . ", " . encode_json($row->my_cool_data) . ", this_is_one: " . $row->this_is_one ."\n";
 }
-
 print "\n\n";
 
 use Data::Dumper;
 print Dumper($query->sth->{NAME});
+#}
 
 $orm->disconnect;
 kill_database();
