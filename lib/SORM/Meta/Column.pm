@@ -3,7 +3,7 @@ use strict;
 use SORM;
 use Class::XSAccessor;
 use Class::Accessor::Inherited::XS {
-    inherited => [qw/types/]
+    inherited => [qw/types db_id name/]
 };
 
 __PACKAGE__->types({
@@ -11,6 +11,8 @@ __PACKAGE__->types({
     int    => 'simple',
     text   => 'simple',
 });
+
+__PACKAGE__->db_id(undef);
 
 sub _make_column {
     my ($class, $orm, $name, $info) = @_;
@@ -21,6 +23,7 @@ sub _make_column {
     } else {
         die "Only simple datatype implemented";
     }
+    $class->name($name);
     return $class;
 }
 

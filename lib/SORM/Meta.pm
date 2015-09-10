@@ -1,31 +1,11 @@
 package SORM::Meta;
+use strict;
+use warnings;
 use SORM::Meta::Table;
 use Class::XSAccessor {
-    accessors => [qw/tables/],
+    accessors => [qw/tables column_by_db_id/],
     constructor => 'new'
 };
-
-
-=cut
-__PACKAGE__->table('my_table');
-__PACKAGE__->columns({
-    id => { type => 'integer', nullable => 1, primary_key => 1},
-    non_id => { type => 'integer' },
-    non_id2 => { type => 'text' },
-    theirs_id => { type => 'integer', nullable => 1, references => { table => 'theirs', column => 'id' } },
-    theirs_id2 => { type => 'integer', nullable => 0, references => { table => 'theirs' } },
-    theirs_id2 => { type => 'integer', references => 'theirs' },
-    _complex => {
-        references => {
-            ['non_id', 'non_id2'] => [ { table => 'theirs', columns => ['data1', 'data2'] } ]
-        },
-        uniqs => [
-            ['non_id', 'non_id2'],
-        ],
-    },
-    ref_set => { reference => 'theirs', 
-});
-=cut
 
 sub parse_meta {
     my ($self, $orm, $meta) = @_;
@@ -35,7 +15,36 @@ sub parse_meta {
         $tables->{$table} = SORM::Meta::Table->make_table($orm, $table, $meta->{$table});
     }
     $self->tables($tables);
+    $self->load_db_meta($orm);
+}
 
+sub load_db_meta {
+    my ($self, $orm) = @_;
+    my $dbh = $orm->dbh;
+    my $db_meta = $dbh->selectall_arrayref('
+SELECT c.relname, a.attname, c.oid, a.attnum
+FROM pg_class c
+LEFT JOIN pg_namespace n ON c.relnamespace = n.oid
+LEFT JOIN pg_attribute a ON a.attrelid = c.oid
+WHERE c.relname IN (' . join(", ", map { $dbh->quote($_) } keys %{$self->tables}) . ')
+ORDER BY c.relname, a.attnum
+');
+    my %columns_by_db_id;
+$DB::single = 1;
+    foreach my $row (@$db_meta){
+        my $table = $self->tables->{$row->[0]};
+        next unless defined $table;
+        my $column_class = $table->columns->{$row->[1]};
+        next unless defined $column_class;
+
+        my $column_db_id = $row->[2] . '_' . $row->[3];
+        my $table_db_id = $row->[2];
+
+        $column_class->db_id($column_db_id);
+        $table->db_id($table_db_id);
+        $columns_by_db_id{$column_db_id} = $column_class;
+    }
+    $self->column_by_db_id(\%columns_by_db_id);
 }
 
 1;

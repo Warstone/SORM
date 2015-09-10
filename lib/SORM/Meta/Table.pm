@@ -4,7 +4,7 @@ use SORM;
 use SORM::Meta::Column;
 
 use Class::XSAccessor {
-    accessors => [qw/name columns/],
+    accessors => [qw/name columns db_id/],
 };
 
 

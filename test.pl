@@ -1,7 +1,11 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use lib::abs qw\lib var/lib plus/DBD-Pg/t/lib\;
+use FindBin;
+
+BEGIN {unshift @INC, map { $FindBin::Bin . '/var/lib/lib/' . $_ } qw[ 5.20.1/x86_64-linux site_perl/5.20.1/x86_64-linux ] }
+
+use lib::abs qw\lib plus/DBD-Pg/t/lib\;
 use FindBin;
 use App::Info::RDBMS::PostgreSQL;
 use DBI;
@@ -13,12 +17,20 @@ my $dsn = init_database();
 
 my $orm = TestORM->new();
 $orm->connect($dsn);
-=cut
+
+$DB::single = 1;
+
 foreach my $row ($orm->q("SELECT * FROM master_table")) {
-    print $row->id . ": " . encode_json($row->data) . "\n";
+    print $row->id . ": " . $row->data . "\n";
 }
 
-foreach my $row ($orm->q("SELECT m.data, s.* FROM master_table m LEFT JOIN slave_table s ON s.master_id = m.id WHERE s.id <= 25")) {
+=cut
+
+foreach my $row ($orm->q("
+SELECT m.data, s.*
+FROM master_table m
+LEFT JOIN slave_table s ON s.master_id = m.id
+WHERE s.id <= 25")) {
     print $row->id . ": " . $row->slave_data . ", " . encode_json($row->data) . "\n";
 }
 =cut

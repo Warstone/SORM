@@ -1,22 +1,28 @@
 package SORM;
 use strict;
-use SORM::Meta;
 use Class::XSAccessor {
     accessors => [qw/dbh dsn mobj/],
 };
 use Class::Accessor::Inherited::XS {
-    inherited => [qw/table_base_class column_base_class meta_base_class query_base_class meta/]
+    inherited => [qw/table_base_class column_base_class meta_base_class query_base_class result_base_class meta/]
 };
 
 __PACKAGE__->table_base_class('SORM::Meta::Table');
 __PACKAGE__->column_base_class('SORM::Meta::Column');
 __PACKAGE__->meta_base_class('SORM::Meta');
 __PACKAGE__->query_base_class('SORM::Query');
+__PACKAGE__->result_base_class('SORM::ResultRow');
 
 
 sub new {
     my ($class) = @_;
+
+    foreach my $class ( $class->table_base_class, $class->column_base_class, $class->meta_base_class, $class->query_base_class, $class->result_base_class ){
+        eval "require $class";
+        die $@ if $@;
+    }
     my $self = bless {}, $class || ref $class || __PACKAGE__;
+    return $self;
 }
 
 sub connect {
@@ -35,6 +41,7 @@ sub disconnect {
 sub make_meta {
     my ($self) = @_;
 
+$DB::single = 1;
     $self->mobj( $self->meta_base_class->new() )->parse_meta($self, $self->meta);
 }
 
