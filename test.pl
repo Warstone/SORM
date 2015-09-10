@@ -18,22 +18,21 @@ my $dsn = init_database();
 my $orm = TestORM->new();
 $orm->connect($dsn);
 
-$DB::single = 1;
-
 foreach my $row ($orm->q("SELECT * FROM master_table")) {
-    print $row->id . ": " . $row->data . "\n";
+    print $row->id . ": " . encode_json($row->data) . "\n";
 }
 
-=cut
+print "\n\n";
 
 foreach my $row ($orm->q("
-SELECT m.data, s.*
-FROM master_table m
-LEFT JOIN slave_table s ON s.master_id = m.id
-WHERE s.id <= 25")) {
+    SELECT m.data, s.*
+    FROM master_table m
+    LEFT JOIN slave_table s ON s.master_id = m.id
+    WHERE s.id <= 25
+")) {
     print $row->id . ": " . $row->slave_data . ", " . encode_json($row->data) . "\n";
 }
-=cut
+
 $orm->disconnect;
 kill_database();
 

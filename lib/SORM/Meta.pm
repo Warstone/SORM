@@ -30,7 +30,6 @@ WHERE c.relname IN (' . join(", ", map { $dbh->quote($_) } keys %{$self->tables}
 ORDER BY c.relname, a.attnum
 ');
     my %columns_by_db_id;
-$DB::single = 1;
     foreach my $row (@$db_meta){
         my $table = $self->tables->{$row->[0]};
         next unless defined $table;
