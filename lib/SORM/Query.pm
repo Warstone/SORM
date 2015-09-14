@@ -1,6 +1,6 @@
 package SORM::Query;
 use Class::XSAccessor {
-    accessors => [qw/sth orm result_class columns executed/]
+    accessors => [qw/sth orm result_class columns executed col_id_to_name/]
 };
 
 sub new {
@@ -35,11 +35,12 @@ sub execute {
 
     my $class = $self->orm->result_base_class;
     unless(defined $class->_generated_results && defined $class->_generated_results->{$signature}){
-        $self->orm->result_base_class->make_resultrow_class($self->orm, $sth, $signature, [ map { $self->orm->mobj->column_by_db_id->{$_}} @$columns ] );
+        $self->orm->result_base_class->make_resultrow_class($self, $signature, [ map { $self->orm->mobj->column_by_db_id->{$_}} @$columns ] );
     }
     $class = $class->_generated_results->{$signature};
     die "Shit happens. This must not be" unless defined $class;
     $self->result_class($class);
+    $self->columns($columns);
 
     $self->executed(1);
 }

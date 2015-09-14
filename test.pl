@@ -18,7 +18,6 @@ my $dsn = init_database();
 my $orm = TestORM->new();
 $orm->connect($dsn);
 
-#for (1..10000){
 foreach my $row ($orm->q("SELECT * FROM master_table")) {
     print $row->id . ": " . encode_json($row->data) . "\n";
 }
@@ -26,7 +25,7 @@ foreach my $row ($orm->q("SELECT * FROM master_table")) {
 print "\n\n";
 
 my $query = $orm->q("
-    SELECT m.data AS my_cool_data, 1 AS this_is_one, 2, 3, s.*
+    SELECT m.data AS my_cool_data, 1 AS this_is_one, s.*
     FROM master_table m
     LEFT JOIN slave_table s ON s.master_id = m.id
     WHERE s.id <= 25
@@ -38,7 +37,6 @@ print "\n\n";
 
 use Data::Dumper;
 print Dumper($query->sth->{NAME});
-#}
 
 $orm->disconnect;
 kill_database();

@@ -12,7 +12,7 @@ sub parse_meta {
 
     my $tables = {};
     foreach my $table (keys %$meta){
-        $tables->{$table} = SORM::Meta::Table->make_table($orm, $table, $meta->{$table});
+        $tables->{$table} = SORM::Meta::Table->_make_table_class($orm, $table, $meta->{$table});
     }
     $self->tables($tables);
     $self->load_db_meta($orm);
@@ -31,16 +31,16 @@ ORDER BY c.relname, a.attnum
 ');
     my %columns_by_db_id;
     foreach my $row (@$db_meta){
-        my $table = $self->tables->{$row->[0]};
-        next unless defined $table;
-        my $column_class = $table->columns->{$row->[1]};
+        my $table_class = $self->tables->{$row->[0]};
+        next unless defined $table_class;
+        my $column_class = $table_class->columns->{$row->[1]};
         next unless defined $column_class;
 
         my $column_db_id = $row->[2] . '_' . $row->[3];
         my $table_db_id = $row->[2];
 
         $column_class->db_id($column_db_id);
-        $table->db_id($table_db_id);
+        $table_class->db_id($table_db_id);
         $columns_by_db_id{$column_db_id} = $column_class;
     }
     $self->column_by_db_id(\%columns_by_db_id);
