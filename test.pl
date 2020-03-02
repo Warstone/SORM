@@ -3,9 +3,7 @@ use strict;
 use warnings;
 use FindBin;
 
-BEGIN {unshift @INC, map { $FindBin::Bin . '/var/lib/lib/' . $_ } qw[ 5.20.1/x86_64-linux site_perl/5.20.1/x86_64-linux ] }
-
-use lib::abs qw\lib plus/DBD-Pg/t/lib\;
+use lib::abs qw\lib\;
 use FindBin;
 use App::Info::RDBMS::PostgreSQL;
 use DBI;

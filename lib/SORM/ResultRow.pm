@@ -39,7 +39,7 @@ sub make_resultrow_class {
     {
         no strict 'refs';
 
-        my $code = "sub {\n\tmy $self = bless {\n";
+        my $code = "sub {\n\tmy \$self = bless {\n";
 
         for(my $i = 0; $i < scalar(@$columns); $i++){
             my $column = $columns->[$i];
@@ -51,10 +51,10 @@ sub make_resultrow_class {
             }
         }
 
-        $code .= "\t}, \$_[0];\n\treturn $self;\n}";
+        $code .= "\t}, \$_[0];\n\treturn \$self;\n}";
         *{"${result_class}::new"} = subname "${result_class}::new" => eval("$code");
 
-        my $isa = \@{"${class}::ISA"};
+        my $isa = \@{"${result_class}::ISA"};
         push(@$isa, $orm->result_base_class);
     }
     $result_class->_query($query);

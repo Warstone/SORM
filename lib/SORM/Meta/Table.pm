@@ -54,7 +54,7 @@ sub _make_table_class {
     $class->name($name);
 
     my $columns = {};
-    my $primary_key = [];
+    my $primary_key = {};
     foreach my $column (keys %$meta){
         my $info = $meta->{$column};
         my $class = ref($orm) . "::Tables::${name}::" . lc($column);
@@ -64,7 +64,7 @@ sub _make_table_class {
             push(@$isa, $orm->column_base_class);
         }
         my $column_class = $class->_make_column_class($orm, $column, $info);
-        $columns->{$column} = $column_class
+        $columns->{$column} = $column_class;
         $primary_key->{$column_class} = undef if $column_class->is_primary_key;
     }
 
